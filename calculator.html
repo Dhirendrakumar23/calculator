@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Animated Calculator</title>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --panel: #0b1220cc;
+            --glass: rgba(255, 255, 255, 0.06);
+            --accent: #6ee7b7;
+            --accent-2: #a78bfa;
+            --muted: #94a3b8;
+            --btn: #111827;
+            --op: #f97316;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(167, 139, 250, 0.08), transparent),
+                radial-gradient(900px 400px at 90% 90%, rgba(110, 231, 183, 0.06), transparent), var(--bg);
+            color: #e6eef8;
+        }
+
+        /* Card */
+        .calc-wrap {
+            width: 360px;
+            max-width: 94vw;
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transform: translateY(0);
+            animation: entrance 600ms cubic-bezier(.2, .9, .3, 1);
+        }
+
+        @keyframes entrance {
+            from {
+                transform: translateY(18px) scale(.98);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1
+            }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px
+        }
+
+        .brand {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .logo {
+            width: 100px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: #052024;
+            box-shadow: 0 6px 18px rgba(167, 139, 250, 0.12);
+        }
+
+        /* Display */
+        .display {
+            height: 84px;
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 6px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .expr {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.1;
+            min-height: 18px;
+            transform-origin: right;
+            transition: transform .25s ease, opacity .25s
+        }
+
+        .value {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            min-height: 34px;
+            display: flex;
+            align-items: center
+        }
+
+        .value.flash {
+            animation: flashResult 650ms ease
+        }
+
+        @keyframes flashResult {
+            0% {
+                transform: translateY(8px);
+                opacity: 0
+            }
+
+            60% {
+                transform: translateY(-4px);
+                opacity: 1
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        /* Buttons grid */
+        .pad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px
+        }
+
+        button.btn {
+            padding: 16px;
+            border-radius: 12px;
+            border: 0;
+            background: linear-gradient(180deg, var(--btn), rgba(255, 255, 255, 0.02));
+            color: #e6eef8;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+            cursor: pointer;
+            outline: none;
+            transition: transform .12s cubic-bezier(.2, .9, .3, 1), box-shadow .12s;
+            position: relative;
+            overflow: hidden
+        }
+
+        button.btn:focus {
+            box-shadow: 0 0 0 4px rgba(110, 231, 183, 0.08)
+        }
+
+        button.btn:active {
+            transform: translateY(2px) scale(.995)
+        }
+
+        /* Special buttons */
+        .btn.op {
+            background: linear-gradient(180deg, #2b3440, #18202b);
+            color: var(--accent-2)
+        }
+
+        .btn.eq {
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+            color: #052024;
+            font-size: 18px
+        }
+
+        .wide {
+            grid-column: span 2
+        }
+
+        /* Ripple effect */
+        .btn::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            transition: opacity .3s, transform .3s;
+            opacity: 0
+        }
+
+        .btn:active::after {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 40%);
+            opacity: 1;
+            transform: scale(0.98)
+        }
+
+        /* small visual helpers */
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        /* key animations for buttons */
+        @keyframes popIn {
+            from {
+                transform: scale(.88) translateY(8px);
+                opacity: 0
+            }
+
+            to {
+                transform: none;
+                opacity: 1
+            }
+        }
+
+        .pad button {
+            animation: popIn 420ms cubic-bezier(.2, .9, .3, 1)
+        }
+
+        /* Responsive */
+        @media (max-width:420px) {
+            .calc-wrap {
+                padding: 16px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="calc-wrap" role="application" aria-label="Animated calculator">
+        <div class="header">
+            <div class="brand">
+                <div class="logo">Calculator</div>
+               
+            </div>
+            <div class="muted">v1.0</div>
+        </div>
+
+        <div class="display" id="display">
+            <div class="expr" id="expr" aria-hidden="true">&nbsp;</div>
+            <div class="value" id="value" aria-live="polite">0</div>
+        </div>
+
+        <div class="pad" role="group" aria-label="Calculator buttons">
+            <button class="btn" data-action="clear" title="All clear">AC</button>
+            <button class="btn" data-action="back" title="Backspace">⌫</button>
+            <button class="btn" data-action="percent">%</button>
+            <button class="btn op" data-value="/">÷</button>
+
+            <button class="btn" data-value="7">7</button>
+            <button class="btn" data-value="8">8</button>
+            <button class="btn" data-value="9">9</button>
+            <button class="btn op" data-value="*">×</button>
+
+            <button class="btn" data-value="4">4</button>
+            <button class="btn" data-value="5">5</button>
+            <button class="btn" data-value="6">6</button>
+            <button class="btn op" data-value="-">−</button>
+
+            <button class="btn" data-value="1">1</button>
+            <button class="btn" data-value="2">2</button>
+            <button class="btn" data-value="3">3</button>
+            <button class="btn op" data-value="+">+</button>
+
+            <button class="btn" data-action="neg">+/-</button>
+            <button class="btn" data-value="0">0</button>
+            <button class="btn" data-value=".">.</button>
+            <button class="btn eq" data-action="equals">=</button>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const exprEl = document.getElementById('expr');
+            const valueEl = document.getElementById('value');
+            const buttons = document.querySelectorAll('.pad .btn');
+
+            let expr = '';
+            let lastResult = null;
+
+            function sanitizeForEval(s) {
+                // allow digits, operators, parentheses, dot and spaces only
+                return /^[0-9+\-*/().\s]+$/.test(s);
+            }
+
+            function updateDisplay() {
+                exprEl.textContent = expr || '\u00A0';
+                valueEl.classList.remove('flash');
+                void valueEl.offsetWidth; // force reflow to restart animation when needed
+            }
+
+            function setValue(v) {
+                valueEl.textContent = v;
+                valueEl.classList.add('flash');
+            }
+
+            function press(v) {
+                if (v === 'AC') {
+                    expr = ''; setValue('0'); lastResult = null; updateDisplay(); return;
+                }
+                if (v === 'BACK') {
+                    expr = expr.slice(0, -1);
+                    updateDisplay(); return;
+                }
+            }
+
+            function computeExpression() {
+                if (!expr) return;
+                // sanitize
+                // we'll replace any accidental unicode operators
+                const safe = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+                if (!sanitizeForEval(safe)) {
+                    setValue('Error'); return;
+                }
+                try {
+                    // eslint-disable-next-line no-new-func
+                    const result = Function('return (' + safe + ')')();
+                    if (typeof result === 'number' && isFinite(result)) {
+                        lastResult = result;
+                        setValue(String(result));
+                        expr = String(result);
+                        updateDisplay();
+                    } else {
+                        setValue('Error');
+                    }
+                } catch (e) {
+                    setValue('Error');
+                }
+            }
+
+            function applyPercent() {
+                if (!expr) return;
+                try {
+                    const safe = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+                    if (!sanitizeForEval(safe)) { setValue('Error'); return; }
+                    const val = Function('return (' + safe + ')')();
+                    const p = val / 100;
+                    lastResult = p; expr = String(p); setValue(String(p)); updateDisplay();
+                } catch (e) { setValue('Error'); }
+            }
+
+            function toggleSign() {
+                // find last number in expr and toggle its sign
+                if (!expr) return;
+                const re = /(?:\d+\.?\d*|\.\d+)(?!.*(?:\d+\.?\d*|\.\d+))/; // last number
+                const m = expr.match(re);
+                if (m) {
+                    const num = m[0];
+                    const idx = m.index;
+                    if (num.startsWith('(') && num.endsWith(')')) {
+                        // ignore
+                        return;
+                    }
+                    const toggled = (Number(num) * -1).toString();
+                    expr = expr.slice(0, idx) + toggled + expr.slice(idx + num.length);
+                    updateDisplay();
+                }
+            }
+
+            buttons.forEach(btn => {
+                const val = btn.dataset.value;
+                const action = btn.dataset.action;
+                btn.addEventListener('click', () => {
+                    // simple animations
+                    btn.style.transform = 'translateY(2px) scale(.995)';
+                    setTimeout(() => btn.style.transform = '', 100);
+
+                    if (action) {
+                        if (action === 'clear') { expr = ''; setValue('0'); lastResult = null; updateDisplay(); }
+                        else if (action === 'back') { expr = expr.slice(0, -1); updateDisplay(); }
+                        else if (action === 'equals') { computeExpression(); }
+                        else if (action === 'percent') { applyPercent(); }
+                        else if (action === 'neg') { toggleSign(); }
+                        return;
+                    }
+                    // value input
+                    if (val) {
+                        // if previous was a result and user starts typing a number, reset
+                        if (lastResult !== null && /[0-9.]/.test(val) && expr === String(lastResult)) {
+                            expr = '';
+                            lastResult = null;
+                        }
+                        // prevent multiple dots in same number
+                        if (val === '.') {
+                            // find last number
+                            const m = expr.match(/(\d*\.?\d*)$/);
+                            if (m && m[0].includes('.')) return; // ignore
+                            if (expr === '') expr = '0';
+                        }
+                        expr += val;
+                        updateDisplay();
+                    }
+                });
+            });
+
+            // keyboard support
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); computeExpression(); return; }
+                if (e.key === 'Backspace') { e.preventDefault(); expr = expr.slice(0, -1); updateDisplay(); return; }
+                if (e.key === 'Escape') { expr = ''; setValue('0'); lastResult = null; updateDisplay(); return; }
+                if (e.key === '%') { applyPercent(); return; }
+                if (e.key === 'p' && (e.ctrlKey || e.metaKey)) { // just an example: ctrl/cmd+p percent
+                    applyPercent(); return;
+                }
+                // numbers and operators
+                const allowed = '0123456789+-*/().';
+                if (allowed.includes(e.key)) {
+                    // map / and * from keyboard are fine
+                    expr += e.key;
+                    updateDisplay();
+                    return;
+                }
+            });
+
+            // init
+            updateDisplay();
+        })();
+    </script>
+</body>
+
+</html>
